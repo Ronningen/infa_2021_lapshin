@@ -83,15 +83,16 @@ def hedgehog(x, y, sizeRatio=1):
     ellipse(s, (69, 56, 55), (210, 275, 20, 45)) # near legs
     ellipse(s, (69, 56, 55), (140, 267, 20, 45))
     spikes(120)
-    ellipse(s, (189, 117, 67), (95, 190, 42, 45)) # fruit1
+    ellipse(s, (189, 117, 67), (95, 190, 42, 45)) # peach1
     ellipse(s, (165, 136, 140), (95, 190, 42, 45), 2)
     spikes(20)
-    ellipse(s, (189, 117, 67), (110, 180, 42, 45)) # fruit2
+    ellipse(s, (189, 117, 67), (110, 180, 42, 45)) # peach2
     ellipse(s, (165, 136, 140), (110, 180, 42, 45), 2)
     mushroom(170, 190, -20, 0.8, s) # mushroom
     circle(s, (234, 51, 35), (235, 210), 24) # apple
     spikes(30)
-    circle(s, (69, 56, 55), )
+    circle(s, (69, 56, 55), (235, 250), 12) # ear
+    circle(s, (220, 150, 150), (233, 248), 5)
     ellipse(s, (69, 56, 55), (230, 235, 70, 60)) # head
     ellipse(s, [160]*3, (250, 254, 15, 12)) # eye
     circle(s, [0]*3, (260, 260), 7)

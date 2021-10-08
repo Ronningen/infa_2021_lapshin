@@ -50,6 +50,22 @@ def new_random_ball(xArea, yArea):
     return {X: x, Y: y, Radius: radius, Color: color, Alive: True, Vx: vx, Vy: vy, Strange: False}
 
 
+def new_strange_ball(xArea, yArea):
+    """
+    Создает новый странный шарик с координатоми где-то в области area
+
+    param: xArea: кортеж вида (x1, x2), где x1 - минимальная разрешенная координата x шарика, x2 - максимальная.
+    param: yArea: кортеж вида (y1, y2), где y1 - минимальная разрешенная координата y шарика, y2 - максимальная.
+    """
+    x = (xArea[0] + xArea[1])/2
+    y = (yArea[0] + yArea[1])/2
+    vx = 4*(random()-0.5)*BALL_INITIAL_VELOCITY
+    vy = 4*(random()-0.5)*BALL_INITIAL_VELOCITY
+    radius = 30
+    color = COLORS[randint(0, len(COLORS)-1)]
+    return {X: x, Y: y, Radius: radius, Color: color, Alive: True, Vx: vx, Vy: vy, Strange: True}
+
+
 def draw_ball(screen, ball):
     """
     Рисует шарик
@@ -58,7 +74,7 @@ def draw_ball(screen, ball):
     param: ball: объект, созданной функцией new_random_ball
     """
     pygame.draw.circle(screen, ball[Color],
-                       (round(ball[X]), round(ball[Y])), round(ball[Radius]))
+                       (round(ball[X]), round(ball[Y])), round(ball[Radius]), 8 * ball[Strange])
 
 
 def evulate_ball(ball, xBound, yBound):
@@ -85,16 +101,19 @@ def evulate_ball(ball, xBound, yBound):
         ball[Y] = yBound[1] - ball[Radius]
         ball[Vy] *= -1
 
-    ball[Radius] -= BALL_VANISHING_SPEED
-    if ball[Radius] <= 0:
-        ball[Alive] = False
+    if ball[Strange]:
+        ball[Color] = COLORS[randint(0, len(COLORS)-1)]
+        ball[Vx] += (random() - 0.5)*2
+        ball[Vy] += (random() - 0.5)*2
+    else:
+        ball[Radius] -= BALL_VANISHING_SPEED
+        if ball[Radius] <= 0:
+            ball[Alive] = False
 
 
-def handle_click(event):
+def handle_click():
     """
     Обрабатывает событие нажатия мышки
-
-    param: event: элемент pygame.event
     """
     global score
     for ball in balls:
@@ -126,13 +145,16 @@ while not finished:
     clock.tick(FPS)
     frame += 1
     if frame % BAll_SPAWNING_RATE == 0:
-        balls.append(new_random_ball((60, WIDTH-60), (60, HEIGHT-60)))
+        if randint(1, 5) != 1:
+            balls.append(new_random_ball((60, WIDTH-60), (60, HEIGHT-60)))
+        else:
+            balls.append(new_strange_ball((0, WIDTH), (0, HEIGHT)))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            handle_click(event)
+            handle_click()
 
     screen.fill(BLACK)
     show_score(screen, 20, 20)

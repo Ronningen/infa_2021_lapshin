@@ -1,11 +1,11 @@
-from typing import Collection
 import pygame
-from pygame.draw import *
-from random import randint
+from random import randint, random
 pygame.init()
 
 FPS = 30
-SPAWNING_RATE = 20
+BAll_SPAWNING_RATE = 20
+BALL_INITIAL_VELOCITY = 5
+BALL_VANISHING_SPEED = 0.2
 WIDTH, HEIGHT = WINDOW_SCALE = 700, 700
 screen = pygame.display.set_mode(WINDOW_SCALE)
 
@@ -16,10 +16,12 @@ GREEN = (0, 255, 0)
 MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
-COLORS = [BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+COLORS = [BLUE, YELLOW, GREEN, MAGENTA, CYAN, RED]
 
 X = 'x'
 Y = 'y'
+Vx = 'vx'
+Vy = 'vy'
 Radius = 'radius'
 Color = 'color'
 Alive = 'alive'
@@ -28,6 +30,7 @@ balls = []
 score = 0
 
 # --
+
 
 def new_random_ball(xArea, yArea):
     """
@@ -38,9 +41,11 @@ def new_random_ball(xArea, yArea):
     """
     x = randint(xArea[0], xArea[1])
     y = randint(yArea[0], yArea[1])
+    vx = 2*(random()-0.5)*BALL_INITIAL_VELOCITY
+    vy = 2*(random()-0.5)*BALL_INITIAL_VELOCITY
     radius = randint(30, 60)
     color = COLORS[randint(0, len(COLORS)-1)]
-    return {X: x, Y: y, Radius: radius, Color: color, Alive: True}
+    return {X: x, Y: y, Radius: radius, Color: color, Alive: True, Vx: vx, Vy: vy}
 
 
 def draw_ball(screen, ball):
@@ -50,16 +55,35 @@ def draw_ball(screen, ball):
     param: screen: элемент pygame.surface
     param: ball: объект, созданной функцией new_random_ball
     """
-    circle(screen, ball[Color], (ball[X], ball[Y]), ball[Radius])
+    pygame.draw.circle(screen, ball[Color],
+                       (round(ball[X]), round(ball[Y])), round(ball[Radius]))
 
 
-def evulate_ball(ball):
+def evulate_ball(ball, xBound, yBound):
     """
-    Изменяет шарик согласно временю: перемещает, может изменять размер и т.д.
+    Изменяет шарик согласно временю: перемещает, изменяет размер и т.д.
 
     param: ball: объект, созданной функцией new_random_ball
+    param: xBound: кортеж вида (x1, x2), где x1 - левая граница координат, x2 - правая граница координат.
+    param: xBound: кортеж вида (x1, x2), где x1 - левая граница координат, x2 - правая граница координат.
     """
-    ball[Radius] -= 1
+    ball[X] += ball[Vx]
+    if ball[X] < xBound[0] + ball[Radius]:
+        ball[X] = xBound[0] + ball[Radius]
+        ball[Vx] *= -1
+    elif ball[X] > xBound[1] - ball[Radius]:
+        ball[X] = xBound[1] - ball[Radius]
+        ball[Vx] *= -1
+
+    ball[Y] += ball[Vy]
+    if ball[Y] < yBound[0] + ball[Radius]:
+        ball[Y] = yBound[0] + ball[Radius]
+        ball[Vy] *= -1
+    elif ball[Y] > yBound[1] - ball[Radius]:
+        ball[Y] = yBound[1] - ball[Radius]
+        ball[Vy] *= -1
+
+    ball[Radius] -= BALL_VANISHING_SPEED
     if ball[Radius] <= 0:
         ball[Alive] = False
 
@@ -81,7 +105,8 @@ def show_score(screen):
     """
     pass
 
-#--
+# --
+
 
 pygame.display.update()
 clock = pygame.time.Clock()
@@ -90,7 +115,7 @@ finished = False
 while not finished:
     clock.tick(FPS)
     frame += 1
-    if frame % SPAWNING_RATE == 0:
+    if frame % BAll_SPAWNING_RATE == 0:
         balls.append(new_random_ball((60, WIDTH-60), (60, HEIGHT-60)))
 
     for event in pygame.event.get():
@@ -103,7 +128,7 @@ while not finished:
     show_score(screen)
     alive_balls = []
     for ball in balls:
-        evulate_ball(ball)
+        evulate_ball(ball, (0, WIDTH), (0, HEIGHT))
         draw_ball(screen, ball)
         if ball[Alive]:
             alive_balls.append(ball)

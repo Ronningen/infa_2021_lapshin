@@ -7,7 +7,7 @@ BAll_SPAWNING_RATE = 20
 BALL_INITIAL_VELOCITY = 5
 BALL_VANISHING_SPEED = 0.2
 WIDTH, HEIGHT = WINDOW_SCALE = 700, 700
-screen = pygame.display.set_mode(WINDOW_SCALE)
+FONT = pygame.font.SysFont("monospace", 15)
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -25,9 +25,11 @@ Vy = 'vy'
 Radius = 'radius'
 Color = 'color'
 Alive = 'alive'
+Strange = 'strange'
 
-balls = []
+screen = pygame.display.set_mode(WINDOW_SCALE)
 score = 0
+balls = []
 
 # --
 
@@ -45,7 +47,7 @@ def new_random_ball(xArea, yArea):
     vy = 2*(random()-0.5)*BALL_INITIAL_VELOCITY
     radius = randint(30, 60)
     color = COLORS[randint(0, len(COLORS)-1)]
-    return {X: x, Y: y, Radius: radius, Color: color, Alive: True, Vx: vx, Vy: vy}
+    return {X: x, Y: y, Radius: radius, Color: color, Alive: True, Vx: vx, Vy: vy, Strange: False}
 
 
 def draw_ball(screen, ball):
@@ -94,16 +96,24 @@ def handle_click(event):
 
     param: event: элемент pygame.event
     """
-    pass
+    global score
+    for ball in balls:
+        x, y = pygame.mouse.get_pos()
+        if (ball[X] - x)**2 + (ball[Y] - y)**2 < ball[Radius]**2:
+            score += 1
+            ball[Alive] = False
 
 
-def show_score(screen):
+def show_score(screen, x, y):
     """
     Выводит количество очков
 
     param: screen: элемент pygame.surface
+    param: x: координата x верхнего левого угла надписи
+    param: y: координата y верхнего левого угла надписи
     """
-    pass
+    label = FONT.render("Your score is " + str(score), 1, (255, 255, 255))
+    screen.blit(label, (x, y))
 
 # --
 
@@ -125,7 +135,7 @@ while not finished:
             handle_click(event)
 
     screen.fill(BLACK)
-    show_score(screen)
+    show_score(screen, 20, 20)
     alive_balls = []
     for ball in balls:
         evulate_ball(ball, (0, WIDTH), (0, HEIGHT))

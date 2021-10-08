@@ -119,7 +119,7 @@ def handle_click():
     for ball in balls:
         x, y = pygame.mouse.get_pos()
         if (ball[X] - x)**2 + (ball[Y] - y)**2 < ball[Radius]**2:
-            score += 1
+            score += 1 + 2*ball[Strange]
             ball[Alive] = False
 
 

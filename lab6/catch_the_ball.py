@@ -1,8 +1,10 @@
-import pygame
+from pathlib import Path
 from random import randint, random
+import pygame
 pygame.init()
 
 FPS = 30
+GAME_TIME = 30  # seconds
 BAll_SPAWNING_RATE = 20
 BALL_INITIAL_VELOCITY = 5
 BALL_VANISHING_SPEED = 0.2
@@ -18,6 +20,16 @@ CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
 COLORS = [BLUE, YELLOW, GREEN, MAGENTA, CYAN, RED]
 
+Name = 'name'
+Score = 'score'
+
+FILE = 'rating'
+if Path(FILE).is_file():
+    players = [{Name: p[0], Score: int(p[1])}
+               for p in map(str.split, open(FILE).readlines())]
+else:
+    players = []
+
 X = 'x'
 Y = 'y'
 Vx = 'vx'
@@ -27,11 +39,39 @@ Color = 'color'
 Alive = 'alive'
 Strange = 'strange'
 
-screen = pygame.display.set_mode(WINDOW_SCALE)
-score = 0
 balls = []
 
+score = 0
+screen = pygame.display.set_mode(WINDOW_SCALE)
+
 # --
+
+
+def new_player(score):
+    """
+    Создает новую запись о игроке
+
+    param: score: игровой счет к концу игры данног игрока
+    """
+    return {Name: 'you_' + str(len(players) + 1), Score: score}
+
+
+def show_rating(screen, x, y, length):
+    """
+    Выводит рейтинг игроков
+
+    param: screen: элемент pygame.surface
+    param: x: координата x верхнего левого угла надписи
+    param: y: координата y верхнего левого угла надписи
+    param: length: длина рейтинга
+    """
+    label = FONT.render('Rating:', 1, (255, 255, 255))
+    screen.blit(label, (x, y))
+    for player in sorted(players, key=lambda p: p[Score], reverse=True)[:length]:
+        label = FONT.render(player[Name] + ': ' +
+                            str(player[Score]), 1, (255, 255, 255))
+        y += FONT.get_height() + 5
+        screen.blit(label, (x, y))
 
 
 def new_random_ball(xArea, yArea):
@@ -150,6 +190,14 @@ while not finished:
         else:
             balls.append(new_strange_ball((0, WIDTH), (0, HEIGHT)))
 
+    if frame % (GAME_TIME * FPS) == 0:
+        players.append(new_player(score))
+        with open(FILE, 'w') as file:
+            for player in players:
+                file.write(player[Name] + ' ' + str(player[Score]) + '\n')
+        score = 0
+        balls = []
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
@@ -158,6 +206,7 @@ while not finished:
 
     screen.fill(BLACK)
     show_score(screen, 20, 20)
+    show_rating(screen, 20, 20 + FONT.get_height() + 5, 5)
     alive_balls = []
     for ball in balls:
         evulate_ball(ball, (0, WIDTH), (0, HEIGHT))

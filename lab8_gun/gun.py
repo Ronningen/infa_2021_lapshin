@@ -74,6 +74,8 @@ class Gun:
         self.screen = screen
         self.f2_power = 10
         self.f2_on = 0
+        self.x = 40
+        self.y = 450
         self.an = 1
         self.color = GREY
 
@@ -91,7 +93,7 @@ class Gun:
         new_ball = Ball(self.screen)
         new_ball.r += 5
         self.an = math.atan2(
-            (event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
+            (event.pos[1]-self.y), (event.pos[0]-self.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
         new_ball.vy = - self.f2_power * math.sin(self.an)
         balls.append(new_ball)
@@ -101,14 +103,31 @@ class Gun:
     def targetting(self, event):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
+            if not (event.pos[0]-self.x):
+                self.an = math.pi/2
+            else:
+                self.an = math.atan(
+                    (event.pos[1]-self.y) / (event.pos[0]-self.x))
         if self.f2_on:
             self.color = RED
         else:
             self.color = GREY
 
     def draw(self):
-        
+        pygame.draw.polygon(
+            self.screen,
+            self.color,
+            [
+                (self.x - math.sin(self.an) * 5, 
+                 self.y + math.cos(self.an) * 5),
+                (self.x + math.sin(self.an) * 5, 
+                 self.y - math.cos(self.an) * 5),
+                (self.x + math.sin(self.an) * 5 + math.cos(self.an) * self.f2_power,
+                 self.y - math.cos(self.an) * 5 + math.sin(self.an) * self.f2_power),
+                (self.x - math.sin(self.an) * 5 + math.cos(self.an) * self.f2_power,
+                 self.y + math.cos(self.an) * 5 + math.sin(self.an) * self.f2_power)
+            ]
+        )
         pass
 
     def power_up(self):
@@ -121,22 +140,14 @@ class Gun:
 
 
 class Target:
-    # self.points = 0
-    # self.live = 1
-    # FIXME: don't work!!! How to call this functions when object is created?
-    # self.new_target()
-
     def __init__(self, screen: pygame.Surface):
         """ Инициализация новой цели. """
         self.screen = screen
         self.x = rnd(600, 780)
         self.y = rnd(300, 550)
         self.r = rnd(2, 50)
+        self.live = 1
         self.color = RED
-
-    def hit(self, points=1):
-        """Попадание шарика в цель."""
-        self.points += points
 
     def draw(self):
         pygame.draw.circle(
@@ -151,6 +162,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
+score = 0
 
 clock = pygame.time.Clock()
 gun = Gun(screen)

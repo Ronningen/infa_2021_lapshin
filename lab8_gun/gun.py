@@ -1,5 +1,5 @@
 import math
-from random import choice, randint as rnd
+from random import choice, randint as rnd, random
 from typing import NoReturn
 
 import pygame
@@ -157,6 +157,8 @@ class Target:
         self.screen = screen
         self.x = rnd(600, 780)
         self.y = rnd(300, 550)
+        self.vx = random()
+        self.vy = random()
         self.r = rnd(2, 50)
         self.live = 1
         self.color = RED
@@ -168,6 +170,15 @@ class Target:
             (int(self.x), int(self.y)),
             self.r
         )
+    
+    def move(self):
+        self.x += self.vx
+        self.y -= self.vy
+        if self.x < 0 or self.x > WIDTH or self.y < 0 or self.y > HEIGHT:
+            self.x = rnd(600, 780)
+            self.y = rnd(300, 550)
+            self.vx = random()
+            self.vy = random()
 
 
 pygame.init()
@@ -226,6 +237,8 @@ while not finished:
             target2 = Target(screen)
             score += 1
             break
+    target1.move()
+    target2.move()
     gun.power_up()
     balls = new_balls 
 

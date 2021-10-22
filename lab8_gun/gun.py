@@ -45,9 +45,27 @@ class Ball:
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
         """
-        # FIXME
         self.x += self.vx
         self.y -= self.vy
+        self.vy -= 1
+        if self.x < 0:
+            self.vx *= -0.5
+            self.vy *= 0.5
+            self.x = 0
+        if self.x > 800:
+            self.vx *= -0.5
+            self.vy *= 0.5
+            self.x = 800
+        if self.y > 580:
+            self.vy *= -0.5
+            self.vx *= 0.5
+            if abs(self.vy) < 4:
+                self.vy *= 0.5
+            if abs(self.vy) < 1.5:
+                self.vy *= 0
+                self.live -= 1
+            self.y = 580
+        
 
     def draw(self):
         pygame.draw.circle(
@@ -128,7 +146,6 @@ class Gun:
                  self.y + math.cos(self.an) * 5 + math.sin(self.an) * self.f2_power)
             ]
         )
-        pass
 
     def power_up(self):
         if self.f2_on:
@@ -188,12 +205,16 @@ while not finished:
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
 
+    new_balls = []
     for b in balls:
+        if b.live > 0:
+            new_balls.append(b)
         b.move()
         if b.hittest(target) and target.live:
             target.live = 0
             target.hit()
             target = Target(screen)
     gun.power_up()
+    balls = new_balls 
 
 pygame.quit()

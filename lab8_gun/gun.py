@@ -1,8 +1,8 @@
 import math
 from random import choice, randint as rnd
+from typing import NoReturn
 
 import pygame
-
 
 FPS = 30
 
@@ -48,10 +48,6 @@ class Ball:
         self.x += self.vx
         self.y -= self.vy
         self.vy -= 1
-        if self.x < 0:
-            self.vx *= -0.5
-            self.vy *= 0.5
-            self.x = 0
         if self.x > 800:
             self.vx *= -0.5
             self.vy *= 0.5
@@ -83,8 +79,7 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
-        # FIXME
-        return False
+        return (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2
 
 
 class Gun:
@@ -136,14 +131,14 @@ class Gun:
             self.screen,
             self.color,
             [
-                (self.x - math.sin(self.an) * 5, 
-                 self.y + math.cos(self.an) * 5),
-                (self.x + math.sin(self.an) * 5, 
-                 self.y - math.cos(self.an) * 5),
-                (self.x + math.sin(self.an) * 5 + math.cos(self.an) * self.f2_power,
-                 self.y - math.cos(self.an) * 5 + math.sin(self.an) * self.f2_power),
-                (self.x - math.sin(self.an) * 5 + math.cos(self.an) * self.f2_power,
-                 self.y + math.cos(self.an) * 5 + math.sin(self.an) * self.f2_power)
+                (self.x - math.sin(self.an) * 3, 
+                 self.y + math.cos(self.an) * 3),
+                (self.x + math.sin(self.an) * 3, 
+                 self.y - math.cos(self.an) * 3),
+                (self.x + math.sin(self.an) * 3 + math.cos(self.an) * self.f2_power,
+                 self.y - math.cos(self.an) * 3 + math.sin(self.an) * self.f2_power),
+                (self.x - math.sin(self.an) * 3 + math.cos(self.an) * self.f2_power,
+                 self.y + math.cos(self.an) * 3 + math.sin(self.an) * self.f2_power)
             ]
         )
 
@@ -176,6 +171,7 @@ class Target:
 
 
 pygame.init()
+FONT = pygame.font.SysFont("monospace", 15)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
@@ -192,6 +188,10 @@ while not finished:
     target.draw()
     for b in balls:
         b.draw()
+    label_score = FONT.render('Score: ' + str(score), 1, BLACK)
+    bullet_label = FONT.render('Misshits: ' + str(bullet), 1, BLACK)
+    screen.blit(label_score, (10, 10))
+    screen.blit(bullet_label, (10, 30))
     pygame.display.update()
 
     clock.tick(FPS)
@@ -212,8 +212,11 @@ while not finished:
         b.move()
         if b.hittest(target) and target.live:
             target.live = 0
-            target.hit()
+            bullet = 0
+            new_balls = []
             target = Target(screen)
+            score += 1
+            break
     gun.power_up()
     balls = new_balls 
 

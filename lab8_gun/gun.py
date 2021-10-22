@@ -179,13 +179,15 @@ score = 0
 
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target(screen)
+target1 = Target(screen)
+target2 = Target(screen)
 finished = False
 
 while not finished:
     screen.fill(WHITE)
     gun.draw()
-    target.draw()
+    target1.draw()
+    target2.draw()
     for b in balls:
         b.draw()
     label_score = FONT.render('Score: ' + str(score), 1, BLACK)
@@ -210,11 +212,18 @@ while not finished:
         if b.live > 0:
             new_balls.append(b)
         b.move()
-        if b.hittest(target) and target.live:
-            target.live = 0
+        if b.hittest(target1) and target1.live:
+            target1.live = 0
             bullet = 0
             new_balls = []
-            target = Target(screen)
+            target1 = Target(screen)
+            score += 1
+            break
+        if b.hittest(target2) and target2.live:
+            target2.live = 0
+            bullet = 0
+            new_balls = []
+            target2 = Target(screen)
             score += 1
             break
     gun.power_up()

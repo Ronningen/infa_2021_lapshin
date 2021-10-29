@@ -36,7 +36,7 @@ class Ball:
         self.vy = 0
         self.color = choice(GAME_COLORS)
         self.live = 30
-        self.grav = 1
+        self.grav = 1.5
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
@@ -82,9 +82,14 @@ class Ball:
 
 class StrangeBall(Ball):
     def __init__(self, screen: pygame.Surface, x=40, y=450):
-        Ball.__init__(self, screen, x=40, y=450)
+        super().__init__(screen, x=x, y=y)
         self.grav = 0.5
         self.color = (100, 200, 250)
+
+    def move(self):
+        self.vx += (random() - 0.5) * 5
+        self.vy += (random() - 0.5) * 5
+        super().move()
 
 class Gun:
     def __init__(self, screen: pygame.Surface):
@@ -182,19 +187,39 @@ class Target:
     def move(self):
         self.x += self.vx
         self.y -= self.vy
-        if self.x < 0 or self.x > WIDTH or self.y < 0 or self.y > HEIGHT:
+        if self.x < -self.r or self.x > WIDTH + self.r or self.y < self.r or self.y > HEIGHT + self.r:
             self.x = rnd(600, 780)
             self.y = rnd(300, 550)
             self.vx = random()
             self.vy = random()
 
+class StrangeTarget(Target):
+    def __init__(self, screen: pygame.Surface):
+        super().__init__(screen)
+        self.color = MAGENTA
+
+    def move(self):
+        self.x += self.vx
+        self.y -= self.vy
+        if self.x < self.r:
+            self.x = self.r
+            self.vx *= -1
+        if self.x > WIDTH - self.r:
+            self.x = WIDTH - self.r
+            self.vx *= -1
+        if self.y < self.r:
+            self.y = self.r
+            self.vy *= -1
+        if self.y > HEIGHT - self.r:
+            self.y = HEIGHT - self.r
+            self.vy *= -1
 
 pygame.init()
 FONT = pygame.font.SysFont("monospace", 15)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
-targets = [Target(screen), Target(screen)]
+targets = [Target(screen), StrangeTarget(screen)]
 score = 0
 
 clock = pygame.time.Clock()
@@ -249,9 +274,12 @@ while not finished:
             t.move()
             new_targets.append(t)
         else:
-            new_targets.append(Target(screen))
+            if rnd(0,1):
+                new_targets.append(StrangeTarget(screen))
+            else:
+                new_targets.append(Target(screen))
     targets = new_targets
-    
+
     gun.power_up()
 
 pygame.quit()

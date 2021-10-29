@@ -97,24 +97,30 @@ class Gun:
         self.f2_power = 10
         self.f2_on = 0
         self.x = 40
-        self.y = 450
+        self.y = 575
         self.an = 1
         self.color = GREY
         self.strange_ball = False
+        self.forward = False
+        self.backward = False
 
     def fire2_start(self, event):
+        """
+        Начинает прицеливание.
+        """
         self.f2_on = 1
 
     def fire2_end(self, event):
-        """Выстрел мячом.
+        """
+        Заканичвает прицеливание - выстрел мячом.
 
         Происходит при отпускании кнопки мыши.
         Начальные значения компонент скорости мяча зависят от длительности зажатия мыши.
         """
         if self.strange_ball:
-            new_ball = StrangeBall(self.screen)
+            new_ball = StrangeBall(self.screen, self.x, self.y)
         else:
-            new_ball = Ball(self.screen)
+            new_ball = Ball(self.screen, self.x, self.y)
             new_ball.r += 5
         self.an = math.atan2(
             (event.pos[1]-self.y), (event.pos[0]-self.x))
@@ -138,6 +144,8 @@ class Gun:
             self.color = GREY
 
     def draw(self):
+        pygame.draw.rect(self.screen, GREEN, (self.x-20, self.y, 40, 20))
+        pygame.draw.rect(self.screen, GREEN, (self.x-8, self.y-5, 16, 5))
         pygame.draw.polygon(
             self.screen,
             self.color,
@@ -154,6 +162,7 @@ class Gun:
         )
 
     def power_up(self):
+        """Повышение заряда пушки (при зажатии мыши)."""
         if self.f2_on:
             if self.f2_power < 100:
                 self.f2_power += 1
@@ -162,7 +171,32 @@ class Gun:
             self.color = GREY
 
     def change_ball(self):
+        """Меняет тип выстреливаемого заряда."""
         self.strange_ball = not self.strange_ball
+
+    def move(self):
+        if self.forward:
+            if self.x < WIDTH * 2 /3:
+                self.x += 1
+        if self.backward:
+            if self.x > 20:
+                self.x -= 1
+
+    def move_forward(self):
+        """Начинает дивжение пушки вперед."""
+        self.forward = True
+
+    def move_backward(self):
+        """Начинает движение пушки назад."""
+        self.backward = True
+
+    def stop_moving_forward(self):
+        """Заканчивает дивжение пушки вперед."""
+        self.forward = False
+
+    def stop_moving_backward(self):
+        """Заканчивает движение пушки назад."""
+        self.backward = False
 
 class Target:
     def __init__(self, screen: pygame.Surface):
@@ -254,6 +288,15 @@ while not finished:
         elif event.type == pygame.KEYDOWN:
             if event.key == 116: #key T pressed
                 gun.change_ball()
+            if event.key == 97: #key A pressed
+                gun.move_backward()
+            if event.key == 100: #key D pressed
+                gun.move_forward()
+        elif event.type == pygame.KEYUP:
+            if event.key == 97: #key A up
+                gun.stop_moving_backward()
+            if event.key == 100: #key D up
+                gun.stop_moving_forward()
 
     new_balls = []
     for b in balls:
@@ -280,6 +323,7 @@ while not finished:
                 new_targets.append(Target(screen))
     targets = new_targets
 
+    gun.move()
     gun.power_up()
 
 pygame.quit()

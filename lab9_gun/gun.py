@@ -87,7 +87,7 @@ class StrangeBall(Ball):
         self.color = (100, 200, 250)
 
     def move(self):
-        self.vx += (random() - 0.5) * 5
+        self.vx += (random() - 0.5)
         self.vy += (random() - 0.5) * 5
         super().move()
 

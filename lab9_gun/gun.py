@@ -66,7 +66,7 @@ class Ball:
         pygame.draw.circle(
             self.screen,
             self.color,
-            (int(self.x), int(self.y)),
+            (round(self.x), round(self.y)),
             self.r
         )
 
@@ -80,6 +80,7 @@ class Ball:
         """
         return (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2
 
+
 class StrangeBall(Ball):
     def __init__(self, screen: pygame.Surface, x=40, y=450):
         super().__init__(screen, x=x, y=y)
@@ -90,6 +91,7 @@ class StrangeBall(Ball):
         self.vx += (random() - 0.5)
         self.vy += (random() - 0.5) * 5
         super().move()
+
 
 class Gun:
     def __init__(self, screen: pygame.Surface):
@@ -176,7 +178,7 @@ class Gun:
 
     def move(self):
         if self.forward:
-            if self.x < WIDTH * 2 /3:
+            if self.x < WIDTH * 2 / 3:
                 self.x += 1
         if self.backward:
             if self.x > 20:
@@ -198,23 +200,30 @@ class Gun:
         """Заканчивает движение пушки назад."""
         self.backward = False
 
+
 class Target:
-    def __init__(self, screen: pygame.Surface):
+    def __init__(self, screen: pygame.Surface, x=None, y=None, vx=None, vy=None):
         """ Инициализация новой цели. """
         self.screen = screen
-        self.x = rnd(600, 780)
-        self.y = rnd(300, 550)
-        self.vx = random()
-        self.vy = random()
         self.r = rnd(2, 50)
         self.live = 1
         self.color = RED
+        if x and y and vx and vy:
+            self.x = x
+            self.y = y
+            self.vx = vx
+            self.vy = vy
+        else:
+            self.x = rnd(600, 780)
+            self.y = rnd(300, 550)
+            self.vx = random()
+            self.vy = random()
 
     def draw(self):
         pygame.draw.circle(
             self.screen,
             self.color,
-            (int(self.x), int(self.y)),
+            (round(self.x), round(self.y)),
             self.r
         )
 
@@ -222,14 +231,15 @@ class Target:
         self.x += self.vx
         self.y -= self.vy
         if self.x < -self.r or self.x > WIDTH + self.r or self.y < self.r or self.y > HEIGHT + self.r:
-            self.x = rnd(600, 780)
-            self.y = rnd(300, 550)
+            self.x = rnd(50, WIDTH-50)
+            self.y = rnd(50, HEIGHT-50)
             self.vx = random()
             self.vy = random()
 
+
 class StrangeTarget(Target):
-    def __init__(self, screen: pygame.Surface):
-        super().__init__(screen)
+    def __init__(self, screen: pygame.Surface, x=None, y=None, vx=None, vy=None):
+        super().__init__(screen, x, y, vx, vy)
         self.color = MAGENTA
 
     def move(self):
@@ -248,16 +258,63 @@ class StrangeTarget(Target):
             self.y = HEIGHT - self.r
             self.vy *= -1
 
+
+class Bomb:
+    def __init__(self, screen: pygame.Surface, x, y):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.vx = 5
+        self.width = 20
+        self.color = YELLOW
+
+    def move(self):
+        self.x += self.vx
+        if self.x < 50:
+            self.x = 50
+            self.vx *= -1
+        if self.x > WIDTH - 50:
+            self.x = WIDTH - 50
+            self.vx *= -1
+
+    def drop_target(self):
+        """
+        Сбрасивает новую цель.
+        """
+        return Target(self.screen, self.x, self.y, rnd(-5, 5), -5 - rnd(-2, 2))
+
+    def draw(self):
+        pygame.draw.rect(screen, self.color, (round(self.x - self.width/2),
+                                              round(self.y - self.width/2),
+                                              self.width, self.width))
+
+
+class StrangeBomb(Bomb):
+    def __init__(self, screen: pygame.Surface, x, y):
+        super().__init__(screen, x, y)
+        self.width = 14
+        self.vx /= 1.5
+        self.color = BLUE
+
+    def drop_target(self):
+        """
+        Сбрасивает новую цель.
+        """
+        return StrangeTarget(self.screen, self.x, self.y, rnd(-5, 5), -5 - rnd(-2, 2))
+
+
 pygame.init()
 FONT = pygame.font.SysFont("monospace", 15)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-bullet = 0
-balls = []
-targets = [Target(screen), StrangeTarget(screen)]
-score = 0
-
 clock = pygame.time.Clock()
+
 gun = Gun(screen)
+balls = []
+targets = []
+bombs = [Bomb(screen, 50, 50), StrangeBomb(screen, 700, 50)]
+
+bullet = 0
+score = 0
 finished = False
 
 while not finished:
@@ -266,6 +323,8 @@ while not finished:
     for t in targets:
         t.draw()
     for b in balls:
+        b.draw()
+    for b in bombs:
         b.draw()
     label_score = FONT.render('Score: ' + str(score), 1, BLACK)
     bullet_label = FONT.render('Misshits: ' + str(bullet), 1, BLACK)
@@ -286,17 +345,19 @@ while not finished:
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
         elif event.type == pygame.KEYDOWN:
-            if event.key == 116: #key T pressed
+            if event.key == 116:  # key T pressed
                 gun.change_ball()
-            if event.key == 97: #key A pressed
+            if event.key == 97:  # key A pressed
                 gun.move_backward()
-            if event.key == 100: #key D pressed
+            if event.key == 100:  # key D pressed
                 gun.move_forward()
         elif event.type == pygame.KEYUP:
-            if event.key == 97: #key A up
+            if event.key == 97:  # key A up
                 gun.stop_moving_backward()
-            if event.key == 100: #key D up
+            if event.key == 100:  # key D up
                 gun.stop_moving_forward()
+    if not rnd(0, 200):
+        targets.append(bombs[rnd(0, len(bombs)-1)].drop_target())
 
     new_balls = []
     for b in balls:
@@ -306,8 +367,8 @@ while not finished:
         for t in targets:
             if b.hittest(t) and t.live:
                 t.live = 0
-                bullet = 0
-                new_balls = []
+                bullet -= 1
+                b.live = 0
                 score += 1
     balls = new_balls
 
@@ -316,12 +377,10 @@ while not finished:
         if t.live:
             t.move()
             new_targets.append(t)
-        else:
-            if rnd(0,1):
-                new_targets.append(StrangeTarget(screen))
-            else:
-                new_targets.append(Target(screen))
     targets = new_targets
+
+    for b in bombs:
+        b.move()
 
     gun.move()
     gun.power_up()
